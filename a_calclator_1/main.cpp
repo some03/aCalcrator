@@ -1,4 +1,5 @@
 #include "neuron.h"
+#include<random>
 
 double  neuronDistance(int x1, int y1, int z1, int x2, int y2, int z2) {
     return std::sqrt((x1 - x2)*(x1 - x2) +(y1 - y2)*(y1 - y2) +(z1 - z2)*(z1 - z2));
@@ -44,12 +45,27 @@ double getApicalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> 
     return rec_apical;
 }
 
+int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, int8_t min[2], int8_t max[2]) {
+    int count = 0;
+    for (const auto &neuron : neurons) {
+        if (neuron.y >= min[1] && neuron.y <= max[1] &&neuron.z >= min[0] && neuron.z <= max[0] )
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+
 int main(){
 
     //立方体のサイズ 
     const int N = 3;
     std::vector<MCNNeuron> neurons;
-    
+    int neuron_rimit = 100;
+    const int time_steps = 20;
+    int count = 0;
+
     double tau = 2.0, tau_a = 2.0, tau_b = 2.0;
     double gB = 1.0, gL = 1.0;
     double W_b = 0.8, W_hb = 0.5, W_a = 0.7, W_ha = 0.5, W_s = 0.9;
@@ -64,8 +80,35 @@ int main(){
             }
         }
     }
-    
 
+    for (int t = 0; t < time_steps; t++)
+    {
+
+        //generate patarn
+        int8_t min[2] = {0,0};
+        int8_t max[2] = {N-1,N-1};
+
+        count = countNeuronsInRegion(neurons, min, max);
+
+        if (count > neuron_rimit)
+        {
+
+            std::vector<MCNNeuron> newneurons;
+
+            for (int i = 0; i < 5; i++)
+            {
+
+                std::random_device rd;
+                std::mt19937 mt(rd());
+                std::uniform_real_distribution<double> disty(min[0], max[0]);
+                std::uniform_real_distribution<double> distz(min[1], max[1]);
+                std::uniform_real_distribution<double> distx(0, N);
+
+                newneurons.emplace_back(distx, disty, distz, tau, tau_a, tau_b,
+                                        gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
+            }
+        }
+    }
 
     return 0;
 

@@ -60,7 +60,8 @@ int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, int8_t min[2], i
 int main(){
 
     //立方体のサイズ 
-    const int N = 3;
+    const int zyN = 8;
+    const int xN = 32;
     std::vector<MCNNeuron> neurons;
     int neuron_rimit = 100;
     const int time_steps = 20;
@@ -72,9 +73,9 @@ int main(){
     double beta = 1.0, V_th = 1.0;
     
     //立方体の上面、左側面、右側面に初期ニューロンを配置
-    for (int x = 0; x < N; ++x) {
-        for (int y = 0; y < N; ++y) {
-            for (int z = 0; z < N; ++z) {
+    for (int x = 0; x < xN; 0.1) {
+        for (int y = 0; y < zyN; 0.1) {
+            for (int z = 0; z < zyN; 0.1) {
                 neurons.emplace_back(x, y, z, tau, tau_a, tau_b,
                                      gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
             }
@@ -85,8 +86,8 @@ int main(){
     {
 
         //generate patarn
-        int8_t min[2] = {0,0};
-        int8_t max[2] = {N-1,N-1};
+        int8_t min[2] = {0,0};//tentative value
+        int8_t max[2] = {zyN-1,zyN-1};//tentative value
 
         count = countNeuronsInRegion(neurons, min, max);
 
@@ -102,11 +103,12 @@ int main(){
                 std::mt19937 mt(rd());
                 std::uniform_real_distribution<double> disty(min[0], max[0]);
                 std::uniform_real_distribution<double> distz(min[1], max[1]);
-                std::uniform_real_distribution<double> distx(0, N);
+                std::uniform_real_distribution<double> distx(0, xN);
 
                 newneurons.emplace_back(distx, disty, distz, tau, tau_a, tau_b,
                                         gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
             }
+            neurons.insert(neurons.end(), newneurons.begin(), newneurons.end());
         }
     }
 

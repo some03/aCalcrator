@@ -11,6 +11,7 @@ class MCNNeuron
 public:
     // ニューロンの位置
     int x, y, z;
+    int index; // ニューロンのインデックス
 
     //basal dendrite 基底樹状突起の膜電位
     double V_b; // 基底樹状突起の膜電位
@@ -34,11 +35,12 @@ public:
     double beta;  // シグモイドの鋭さ
     double V_th;  // スパイク閾値
     int S_h;    // スパイク出力（0または1）
+    double stdptime=0;
 
     MCNNeuron(int posX, int posY, int posZ, double tau_, double tau_a_, double tau_b_, double gB_, double gL_,
-              double W_b_, double W_hb_,double W_a_, double W_ha_,double W_s_, double beta_, double V_th_);
+              double W_b_, double W_hb_,double W_a_, double W_ha_,double W_s_, double beta_, double V_th_,int index_);
 
-    void update(double S_in_basal, double S_in_apical, double rec_basal, double rec_apical);
+    void update(double S_in_basal, double S_in_apical, double rec_basal, double rec_apical,double dt);
     int heaviside(double x, double threshold);
     double sigmoid(double x, double beta);
 

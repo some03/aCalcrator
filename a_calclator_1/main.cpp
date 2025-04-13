@@ -1,5 +1,12 @@
 #include "neuron.h"
 #include<random>
+#include<map>
+
+
+struct Synapse {
+    int preNeuronIndex; // プレシナプスニューロンのインデックス
+    int postNeuronIndex; // ポストシナプスニューロンのインデックス
+};
 
 double  neuronDistance(int x1, int y1, int z1, int x2, int y2, int z2) {
     return std::sqrt((x1 - x2)*(x1 - x2) +(y1 - y2)*(y1 - y2) +(z1 - z2)*(z1 - z2));
@@ -22,25 +29,24 @@ double getExternalInputApical(const MCNNeuron &neuron,uint8_t up,uint8_t leftsid
     return 0.0;
 }
 
-double getBasalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons) {
+double getBasalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons,std::map<Synapse, int> &synapses) {
     double rec_basal = 0.0;
+
     for (const auto &other : neurons) {
-        if (current.x == other.x && current.y == other.y && current.z == other.z)
-            continue;
-        if (neuronDistance(current.x, current.y, current.z, other.x, other.y, other.z) <= 1)
-            rec_basal += other.S_h;
+
+        if (current.x == current.x && current.y == other.y && current.z == other.z)continue;
+        else rec_basal += synapses[{current.index,other.index}]*other.S_h;
+
     }
     return rec_basal;
 }
 
-double getApicalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons) {
+double getApicalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons,std::map<Synapse, int> &synapses) {
     double rec_apical = 0.0;
+
     for (const auto &other : neurons) {
-        if (current.x == other.x && current.y == other.y && current.z == other.z)
-            continue;
-        double d = neuronDistance(current.x, current.y, current.z, other.x, other.y, other.z);
-        if (d >= 2.0)
-            rec_apical += other.S_h;
+        if (current.x == current.x && current.y == other.y && current.z == other.z)continue;
+        else rec_apical += other.S_h;
     }
     return rec_apical;
 }
@@ -56,16 +62,18 @@ int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, int8_t min[2], i
     return count;
 }
 
-
 int main(){
 
     //立方体のサイズ 
     const int zyN = 8;
     const int xN = 32;
     std::vector<MCNNeuron> neurons;
+    std::map<Synapse, int> synapses;
     int neuron_rimit = 100;
     const int time_steps = 20;
+    const int dt = 0.1;
     int count = 0;
+    int index = 0;
 
     double tau = 2.0, tau_a = 2.0, tau_b = 2.0;
     double gB = 1.0, gL = 1.0;
@@ -77,12 +85,28 @@ int main(){
         for (int y = 0; y < zyN; 0.1) {
             for (int z = 0; z < zyN; 0.1) {
                 neurons.emplace_back(x, y, z, tau, tau_a, tau_b,
-                                     gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
+                                     gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th,index);
+                index++;
             }
         }
     }
 
-    for (int t = 0; t < time_steps; t++)
+    for (int i = 0; i < neurons.size(); i++)
+    {
+        for (const auto &other : neurons)
+        {
+            if (neurons[i].x == other.x && neurons[i].y == other.y && neurons[i].z == other.z)
+                continue;
+            double d = neuronDistance(neurons[i].x, neurons[i].y, neurons[i].z, other.x, other.y, other.z);
+            
+            if (d<=1||(d >= 2.0 && d <= 3.0))synapses[{i, other.index}] = 1; // シナプスの重みを1に設定
+            else synapses[{i, other.index}] = 0; // シナプスの重みを1に設定
+        }
+    }
+
+    
+
+    for (int t = 0; t < time_steps; dt)
     {
 
         //generate patarn

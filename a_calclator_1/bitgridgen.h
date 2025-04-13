@@ -21,7 +21,6 @@ public:
 private:
     int gridSize_;
 
-    // 内部処理用のヘルパーメソッドの宣言
 
     // 整数 value を固定ビット数(bits)の二進数文字列に変換する
     std::string toBinary(int value, int bits) const;

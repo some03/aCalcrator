@@ -10,7 +10,7 @@ class MCNNeuron
 {
 public:
     // ニューロンの位置
-    int x, y, z;
+    float x, y, z;
     int index; // ニューロンのインデックス
 
     //basal dendrite 基底樹状突起の膜電位

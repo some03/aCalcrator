@@ -29,26 +29,16 @@ double getExternalInputApical(const MCNNeuron &neuron,uint8_t up,uint8_t leftsid
     return 0.0;
 }
 
-double getBasalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons,std::map<Synapse, int> &synapses) {
-    double rec_basal = 0.0;
+double getRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons,std::map<Synapse, int> &synapses) {
+    double rec = 0.0;
 
     for (const auto &other : neurons) {
 
         if (current.x == current.x && current.y == other.y && current.z == other.z)continue;
-        else rec_basal += synapses[{current.index,other.index}]*other.S_h;
+        rec += synapses[{current.index,other.index}]*other.S_h;
 
     }
-    return rec_basal;
-}
-
-double getApicalRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons,std::map<Synapse, int> &synapses) {
-    double rec_apical = 0.0;
-
-    for (const auto &other : neurons) {
-        if (current.x == current.x && current.y == other.y && current.z == other.z)continue;
-        else rec_apical += other.S_h;
-    }
-    return rec_apical;
+    return rec;
 }
 
 int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, int8_t min[2], int8_t max[2]) {
@@ -60,6 +50,37 @@ int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, int8_t min[2], i
         }
     }
     return count;
+}
+
+void stdpUpdate(std::map<Synapse, int> &synapses, const std::vector<MCNNeuron> &neurons) {
+    // STDPの更新ルールに基づいてシナプスの重みを更新
+    double delta_t = 0.1; // 時間差
+    double A_plus = 0.005; // 増加の学習率
+    double A_minus = 0.005; // 減少の学習率
+    double tau_plus = 20.0; // 増加の時間定数
+    double tau_minus = 20.0; // 減少の時間定数
+    double limit = 5; // シナプスの重みの上限
+
+    for(const auto &synapse : synapses) {
+        int preIndex = synapse.first.preNeuronIndex;
+        int postIndex = synapse.first.postNeuronIndex;
+
+        delta_t = neurons[postIndex].stdptime - neurons[preIndex].stdptime;
+        if (delta_t > 0) {
+            synapses[{preIndex,postIndex}] += A_plus * exp(-delta_t / tau_plus);
+        } else {
+            synapses[{preIndex,postIndex}] -= A_minus * exp(delta_t / tau_minus);
+        }
+        
+        // シナプスの重みを制限
+        if (synapses[{preIndex,postIndex}] > limit) {
+            synapses[{preIndex,postIndex}] = limit;
+        } else if (synapses[{preIndex,postIndex}] < 0) {
+            synapses[{preIndex,postIndex}] = 0;
+        }
+
+    }
+
 }
 
 int main(){
@@ -91,16 +112,14 @@ int main(){
         }
     }
 
-    for (int i = 0; i < neurons.size(); i++)
+
+    for (int i = 0; i < neurons.size()-1; i++)
     {
-        for (const auto &other : neurons)
+        for (int j=1;j<neurons.size();j++)
         {
-            if (neurons[i].x == other.x && neurons[i].y == other.y && neurons[i].z == other.z)
-                continue;
-            double d = neuronDistance(neurons[i].x, neurons[i].y, neurons[i].z, other.x, other.y, other.z);
-            
-            if (d<=1||(d >= 2.0 && d <= 3.0))synapses[{i, other.index}] = 1; // シナプスの重みを1に設定
-            else synapses[{i, other.index}] = 0; // シナプスの重みを1に設定
+            double d = neuronDistance(neurons[i].x, neurons[i].y, neurons[i].z, neurons[j].x, neurons[j].y, neurons[j].z);
+            if (d<=1||(d >= 2.0 && d <= 3.0))synapses[{i,j}] = 1; // シナプスの重みを1に設定
+            else synapses[{i,j}] = 0; // シナプスの重みを1に設定
         }
     }
 
@@ -113,13 +132,16 @@ int main(){
         int8_t min[2] = {0,0};//tentative value
         int8_t max[2] = {zyN-1,zyN-1};//tentative value
 
+        
+        
+        
+        
+        //last process 
         count = countNeuronsInRegion(neurons, min, max);
-
         if (count > neuron_rimit)
         {
 
             std::vector<MCNNeuron> newneurons;
-
             for (int i = 0; i < 5; i++)
             {
 

@@ -23,15 +23,15 @@ double MCNNeuron::sigmoid(double x, double beta) {
     return 1.0 / (1.0 + exp(-beta * x));
 }
 
-void MCNNeuron::update(double S_in_basal, double S_in_apical, double rec_basal, double rec_apical,double dt) {
+void MCNNeuron::update(double S_in_basal, double S_in_apical, double rec,double dt) {
 
     // basal更新
     //vb[t] = vb[t-1] + (W_b * S_in_basal + W_hb * rec_basal - vb[t-1]) / tau_b;
-    V_b += (W_b * S_in_basal + W_hb * rec_basal - V_b) / tau_b;
+    V_b += (W_b * S_in_basal + W_hb * rec - V_b) / tau_b;
 
     // apritical更新
     //va[t] = va[t-1] + (W_a * S_in_apical + W_ha * rec_apical - va[t-1]) / tau_a;
-    V_a += (W_a * S_in_apical + W_ha * rec_apical - V_a) / tau_a;
+    V_a += (W_a * S_in_apical + W_ha * rec - V_a) / tau_a;
     
     // 頂部突起からのゲーティング信号
     double z_signal = sigmoid(V_a, beta);

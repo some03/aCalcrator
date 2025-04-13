@@ -40,7 +40,7 @@ public:
     MCNNeuron(int posX, int posY, int posZ, double tau_, double tau_a_, double tau_b_, double gB_, double gL_,
               double W_b_, double W_hb_,double W_a_, double W_ha_,double W_s_, double beta_, double V_th_,int index_);
 
-    void update(double S_in_basal, double S_in_apical, double rec_basal, double rec_apical,double dt);
+    void update(double S_in_basal, double S_in_apical, double rec ,double dt);
     int heaviside(double x, double threshold);
     double sigmoid(double x, double beta);
 

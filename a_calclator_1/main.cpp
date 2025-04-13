@@ -8,6 +8,12 @@
 struct Synapse {
     int preNeuronIndex; // プレシナプスニューロンのインデックス
     int postNeuronIndex; // ポストシナプスニューロンのインデックス
+    bool operator<(const Synapse& other) const {
+        if (preNeuronIndex != other.preNeuronIndex) {
+            return preNeuronIndex < other.preNeuronIndex;
+        }
+        return postNeuronIndex < other.postNeuronIndex;
+    }
 };
 
 double  neuronDistance(int x1, int y1, int z1, int x2, int y2, int z2) {
@@ -33,13 +39,16 @@ double getExternalInputApical(const MCNNeuron &neuron,uint8_t up,uint8_t leftsid
 
 double getRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neurons,std::map<Synapse, int> &synapses) {
     double rec = 0.0;
+    int j=0;
 
-    for (const MCNNeuron &other : neurons) {
-
-        if (current.x == current.x && current.y == other.y && current.z == other.z)continue;
-        rec += synapses[{current.index,other.index}]*other.S_h;
-
+    for(int i=0;i<neurons.size();i++){
+        if (current.x == neurons[i].x && current.y == neurons[i].y && current.z == neurons[i].z){
+            j=i;
+            continue;
+        }
+        rec += synapses[{j,i}]*neurons[i].S_h;
     }
+
     return rec;
 }
 
@@ -116,29 +125,28 @@ int main(){
     int oldnuronnum=0;
     
     //sensorのニューロンを配置
-    for(float y=0;y<=zyN;0.4){
-        for(float z=0;z<=zyN;0.4){
+    for(double y=0;y<=zyN;0.4){
+        for(double z=0;z<=zyN;0.4){
             neurons.emplace_back(0, y, z, tau, tau_a, tau_b,
-                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th,index);
+                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
 
             neurons.emplace_back(xN, y, z, tau, tau_a, tau_b,
-                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th,index);
+                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
         }
     }
     sennsornum=neurons.size();
 
     //input,outputのニューロンを配置
-    for(float x=0;x<=xN;0.4){
-        for(float z=0;z<=zyN;0.4){
+    for(double x=0;x<=xN;0.4){
+        for(double z=0;z<=zyN;0.4){
             neurons.emplace_back(x, 0, z, tau, tau_a, tau_b,
-                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th,index);
+                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
 
             neurons.emplace_back(x, zyN, z, tau, tau_a, tau_b,
-                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th,index);
+                                 gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
         }
     }
     ionum=neurons.size()-sennsornum;
-
 
     //x 20
     //y 20
@@ -219,8 +227,10 @@ int main(){
                 std::uniform_real_distribution<double> disty(min[0], max[0]);
                 std::uniform_real_distribution<double> distz(min[1], max[1]);
                 std::uniform_real_distribution<double> distx(0, xN);
-
-                newneurons.emplace_back(distx, disty, distz, tau, tau_a, tau_b,
+                newneurons.emplace_back(static_cast<double>(distx(mt)),
+                                        static_cast<double>(disty(mt)),
+                                        static_cast<double>(distz(mt)),
+                                        tau, tau_a, tau_b,
                                         gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
             }
             neurons.insert(neurons.end(), newneurons.begin(), newneurons.end());

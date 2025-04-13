@@ -1,4 +1,5 @@
 #include "iogrid.h"
+#include <limits>
 
 IoGrid::IoGrid(int gridRows, int gridCols) : midiMapping(gridRows, std::vector<int>(gridCols, 0)), spikeCounts(gridRows, std::vector<int>(gridCols, 0)) {
     this->gridRows = gridRows; // グリッドの行数を保存

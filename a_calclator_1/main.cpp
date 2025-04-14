@@ -159,8 +159,8 @@ int main() {
     const int xN = 8;
     std::vector<MCNNeuron> neurons;
     std::map<Synapse, int> synapses;
-    int neuron_limit = 100;  // 指定領域内のニューロン数の上限
-    const int time_steps = 50;
+    int neuron_limit = 300;  // 指定領域内のニューロン数の上限
+    const int time_steps = 10;
     const int dt = 1;  // dt=1なら時間変数はintで問題なし
     int count = 0;
 
@@ -226,7 +226,7 @@ int main() {
         std::vector<double> s_in_basal(sensorNeuronNum, 0.0);
         std::vector<double> s_in_apical(sensorNeuronNum, 0.0);
 
-        //std::cout << "count: " << count << std::endl;
+        std::cout << "count: " << t<< std::endl;
        
 
         // センサーマップの更新と入力値の取得
@@ -245,10 +245,9 @@ int main() {
                 s_in_basal[i % sensorNeuronNum] = getExternalInputBasal(neurons[i], zyN, 0, xN, inputsensor, isFeedback);
                 s_in_apical[i % sensorNeuronNum] = getExternalInputApical(neurons[i], zyN, 0, xN, inputsensor,isFeedback);
             }
-            std::cout<<"s_in_basal: "<<s_in_basal[0]<<" s_in_apical: "<<s_in_apical[0]<<std::endl;
             //isFeedback = true;
         }
-        /*
+        
 
         // ニューロンの更新と再帰入力の計算
         for (size_t i = 0; i < neurons.size(); i++) {
@@ -259,11 +258,15 @@ int main() {
                 ioGrid.recordSpike(static_cast<int>(neurons[i].y), static_cast<int>(neurons[i].x));
             }
         }
+        
         // STDPによるシナプスの更新
         stdpUpdate(synapses, neurons);
 
+        //untile here OK
+
+        
         // 一定数（指定領域内）を超えた場合、新規ニューロンの追加
-        if (count > neuron_limit) {
+        if (count < neuron_limit) {
             std::vector<MCNNeuron> newNeurons;
             // ループ変数名の衝突を避けるため別名を使用
             for (int r = 0; r < 5; r++) {
@@ -319,7 +322,7 @@ int main() {
             }
             oldNeuronNum = static_cast<int>(neurons.size());
         }
-            */
+            
     }
         
 

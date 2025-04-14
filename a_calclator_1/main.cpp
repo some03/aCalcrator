@@ -122,6 +122,10 @@ int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons,
     for (const MCNNeuron &neuron : neurons) {
         int yIdx = static_cast<int>(neuron.y);
         int zIdx = static_cast<int>(neuron.z);
+
+        if(yIdx>= sensorMap.size() || zIdx >= sensorMap[0].size())
+            std::cerr << "Index out of bounds: yIdx=" << yIdx << ", zIdx=" << zIdx << std::endl;
+
         if (sensorMap[yIdx][zIdx] == 1)count++;
     }
     return count;
@@ -237,15 +241,15 @@ int main() {
                 s_in_basal[i % sensorNeuronNum] = getExternalInputBasal(neurons[i], zyN, 0, xN, feedbacksensor, isFeedback);
                 s_in_apical[i % sensorNeuronNum] = getExternalInputApical(neurons[i], zyN, 0, xN, feedbacksensor,isFeedback);
             }
-            isFeedback = false;
         }
         else {
+
+            //std::cout << "inputsensor: " << ioGrid.getSpikeCounts() << std::endl;
             count = countNeuronsInRegion(neurons, inputsensor);
             for (size_t i = 0; i < neurons.size(); i++) {
                 s_in_basal[i % sensorNeuronNum] = getExternalInputBasal(neurons[i], zyN, 0, xN, inputsensor, isFeedback);
                 s_in_apical[i % sensorNeuronNum] = getExternalInputApical(neurons[i], zyN, 0, xN, inputsensor,isFeedback);
             }
-            //isFeedback = true;
         }
         
 
@@ -264,21 +268,23 @@ int main() {
 
         //untile here OK
 
-        
         // 一定数（指定領域内）を超えた場合、新規ニューロンの追加
         if (count < neuron_limit) {
+
             std::vector<MCNNeuron> newNeurons;
+
             // ループ変数名の衝突を避けるため別名を使用
             for (int r = 0; r < 5; r++) {
+
                 if (isFeedback) {
-                    for (size_t row = 0; row < feedbacksensor.size(); row++) {
-                        for (size_t col = 0; col < feedbacksensor[row].size(); col++) {
+                    for (int row = 0; row < zyN; row++) {
+                        for (int col = 0; col <zyN; col++) {
                             if (feedbacksensor[row][col] == 1) {
                                 std::random_device rd;
                                 std::mt19937 mt(rd());
-                                std::uniform_real_distribution<double> disty(row - 1, row);
-                                std::uniform_real_distribution<double> distz(col - 1, col);
-                                std::uniform_real_distribution<double> distx(0, xN);
+                                std::uniform_real_distribution<double> disty(row-1, row);
+                                std::uniform_real_distribution<double> distz(col-1, col);
+                                std::uniform_real_distribution<double> distx(xN-1, 0);
                                 newNeurons.emplace_back(distx(mt), disty(mt), distz(mt),
                                                          tau, tau_a, tau_b,
                                                          gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
@@ -287,14 +293,16 @@ int main() {
                     }
                 }
                 else {
-                    for (size_t row = 0; row < inputsensor.size(); row++) {
-                        for (size_t col = 0; col < inputsensor[row].size(); col++) {
+                    for (int row = 0; row < zyN; row++) {
+
+                        //std::cout << "new neuron added: " << std::endl;
+                        for (int col = 0; col < zyN; col++) {
                             if (inputsensor[row][col] == 1) {
                                 std::random_device rd;
                                 std::mt19937 mt(rd());
-                                std::uniform_real_distribution<double> disty(row - 1, row);
-                                std::uniform_real_distribution<double> distz(col - 1, col);
-                                std::uniform_real_distribution<double> distx(0, xN);
+                                std::uniform_real_distribution<double> disty(row-1, row);
+                                std::uniform_real_distribution<double> distz(col-1, col);
+                                std::uniform_real_distribution<double> distx(xN-1, 0);
                                 newNeurons.emplace_back(distx(mt), disty(mt), distz(mt),
                                                          tau, tau_a, tau_b,
                                                          gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
@@ -307,8 +315,8 @@ int main() {
             neurons.insert(neurons.end(), newNeurons.begin(), newNeurons.end());
 
             // 新規接続の生成：既存ニューロンと新規ニューロンの間にシナプスを生成
-            for (size_t i = 0; i < neurons.size() - 1; i++) {
-                for (size_t j = oldNeuronNum; j < neurons.size(); j++) {
+            for (int i = 0; i < neurons.size() - 1; i++) {
+                for (int j = oldNeuronNum; j < neurons.size(); j++) {
                     double d = neuronDistance(static_cast<int>(neurons[i].x), static_cast<int>(neurons[i].y),
                                               static_cast<int>(neurons[i].z),
                                               static_cast<int>(neurons[j].x), static_cast<int>(neurons[j].y),
@@ -322,6 +330,7 @@ int main() {
             }
             oldNeuronNum = static_cast<int>(neurons.size());
         }
+        isFeedback= !isFeedback; 
             
     }
         

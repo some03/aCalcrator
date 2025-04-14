@@ -52,11 +52,10 @@ double getRecInput(const MCNNeuron &current, const std::vector<MCNNeuron> &neuro
     return rec;
 }
 
-int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, int8_t min[2], int8_t max[2]) {
+int countNeuronsInRegion(const std::vector<MCNNeuron> &neurons, std::vector<std::vector<int>> &sensor) {
     int count = 0;
     for (const MCNNeuron &neuron : neurons) {
-        if (neuron.y >= min[1] && neuron.y <= max[1] &&neuron.z >= min[0] && neuron.z <= max[0] )
-        {
+        if (sensor[neuron.y/1][neuron.z/1] == 1) {
             count++;
         }
     }
@@ -102,8 +101,8 @@ int main(){
     std::vector<MCNNeuron> neurons;
     std::map<Synapse, int> synapses;
     int neuron_rimit = 100;
-    const int time_steps = 20;
-    const int dt = 0.1;
+    const int time_steps = 50;
+    const int dt = 1;
     int count = 0;
     int index = 0;
 
@@ -125,8 +124,8 @@ int main(){
     int oldnuronnum=0;
     
     //sensorのニューロンを配置
-    for(double y=0;y<=zyN;0.4){
-        for(double z=0;z<=zyN;0.4){
+    for(double y=0;y<=zyN;y+=0.4){
+        for(double z=0;z<=zyN;z+=0.4){
             neurons.emplace_back(0, y, z, tau, tau_a, tau_b,
                                  gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
 
@@ -137,8 +136,8 @@ int main(){
     sennsornum=neurons.size();
 
     //input,outputのニューロンを配置
-    for(double x=0;x<=xN;0.4){
-        for(double z=0;z<=zyN;0.4){
+    for(double x=0;x<=xN;x+=0.4){
+        for(double z=0;z<=zyN;z+=0.4){
             neurons.emplace_back(x, 0, z, tau, tau_a, tau_b,
                                  gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
 
@@ -167,21 +166,21 @@ int main(){
     inputsensor=(sensorGrid.createBitmap(midinote));
     bool isfeedback = false;
 
-    for (int t = 0; t < time_steps; dt)
+    for (int t = 0; t < time_steps; t+=dt)
     {
         std::vector<double> s_in_basal(sennsornum, 0.0);
         std::vector<double> s_in_apical(sennsornum, 0.0);
 
 
-        //generate patarn
-        int8_t min[2] = {0,0};//tentative value
-        int8_t max[2] = {zyN-1,zyN-1};//tentative value
+        std::cout<<"count:"<<count<<std::endl;
 
         if (isfeedback){
 
+            count=countNeuronsInRegion(neurons, feedbacksensor);
             for (size_t i = 0; i < neurons.size(); i++)
             {
                 int note=ioGrid.getSpikeCounts();
+                std::cout << "note:" << note << std::endl;
                 feedbacksensor=(feedbackGrid.createBitmap(note));
                 s_in_basal[i] = getExternalInputBasal(neurons[i], zyN, 0, xN,feedbacksensor);
                 s_in_apical[i] = getExternalInputApical(neurons[i], zyN, 0, xN, feedbacksensor);
@@ -191,6 +190,7 @@ int main(){
         }
         else
         {
+            count=countNeuronsInRegion(neurons, inputsensor);
             for (size_t i = 0; i < neurons.size(); i++)
             {
                 s_in_basal[i] = getExternalInputBasal(neurons[i], zyN, 0, xN, inputsensor);
@@ -214,24 +214,56 @@ int main(){
         
         
         //last process 
-        count = countNeuronsInRegion(neurons, min, max);
         if (count > neuron_rimit)
         {
 
             std::vector<MCNNeuron> newneurons;
             for (int i = 0; i < 5; i++)
             {
+                if(isfeedback){
+                    for (int j = 0; j < feedbacksensor.size(); j++)
+                    {
+                        for (int k = 0; k < feedbacksensor.size(); k++)
+                        {
+                            if (inputsensor[j][k] == 1)
+                            {
+                                std::random_device rd;
+                                std::mt19937 mt(rd());
+                                std::uniform_real_distribution<double> disty(j-1, j);
+                                std::uniform_real_distribution<double> distz(k-1, k);
+                                std::uniform_real_distribution<double> distx(0, xN);
+                                newneurons.emplace_back(static_cast<double>(distx(mt)),
+                                                        static_cast<double>(disty(mt)),
+                                                        static_cast<double>(distz(mt)),
+                                                        tau, tau_a, tau_b,
+                                                        gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < inputsensor.size(); i++)
+                    {
+                        for (int j = 0; j < inputsensor.size(); j++)
+                        {
+                            if (inputsensor[i][j] == 1)
+                            {
 
-                std::random_device rd;
-                std::mt19937 mt(rd());
-                std::uniform_real_distribution<double> disty(min[0], max[0]);
-                std::uniform_real_distribution<double> distz(min[1], max[1]);
-                std::uniform_real_distribution<double> distx(0, xN);
-                newneurons.emplace_back(static_cast<double>(distx(mt)),
-                                        static_cast<double>(disty(mt)),
-                                        static_cast<double>(distz(mt)),
-                                        tau, tau_a, tau_b,
-                                        gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
+                                std::random_device rd;
+                                std::mt19937 mt(rd());
+                                std::uniform_real_distribution<double> disty(i-1, i);
+                                std::uniform_real_distribution<double> distz(j-1, j);
+                                std::uniform_real_distribution<double> distx(0, xN);
+                                newneurons.emplace_back(static_cast<double>(distx(mt)),
+                                                        static_cast<double>(disty(mt)),
+                                                        static_cast<double>(distz(mt)),
+                                                        tau, tau_a, tau_b,
+                                                        gB, gL, W_b, W_hb, W_a, W_ha, W_s, beta, V_th);
+                            }
+                        }
+                    }
+                }
             }
             neurons.insert(neurons.end(), newneurons.begin(), newneurons.end());
 

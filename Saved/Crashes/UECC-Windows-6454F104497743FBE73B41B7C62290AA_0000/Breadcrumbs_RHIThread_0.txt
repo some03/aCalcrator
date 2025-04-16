@@ -1,0 +1,4 @@
+Breadcrumbs 'RHIThread'
+ - Scene
+ - FRDGBuilder::Execute
+ - Frame 51

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\aCalcProject.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{F31BBDD1-B3E8-3BCC-9652-680E16935819}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\aCalcProject.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\aCalcProjectEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\.vsconfig" />
+    <Filter Include="Config">
+      <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\aCalcProject">
+      <UniqueIdentifier>{63F60138-6578-3A1F-AB8E-0D2675EE8448}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\aCalcProject\aCalcProject.Build.cs">
+      <Filter>Source\aCalcProject</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\aCalcProject\aCalcProject.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\aCalcProject.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\aCalcProjectGameModeBase.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\aCalcProjectGameModeBase.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\Network.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\Network.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\Neurons.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\Neurons.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "aCalcProject",
+			"Path": "..\\Source\\aCalcProject.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "aCalcProjectEditor",
+			"Path": "..\\Source\\aCalcProjectEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

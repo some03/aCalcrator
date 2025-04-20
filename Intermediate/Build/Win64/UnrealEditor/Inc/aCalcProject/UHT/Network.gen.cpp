@@ -15,6 +15,7 @@ ACALCPROJECT_API UClass* Z_Construct_UClass_ANetwork_NoRegister();
 ACALCPROJECT_API UClass* Z_Construct_UClass_ANeurons_NoRegister();
 COREUOBJECT_API UClass* Z_Construct_UClass_UClass();
 ENGINE_API UClass* Z_Construct_UClass_AActor();
+ENGINE_API UClass* Z_Construct_UClass_UStaticMeshComponent_NoRegister();
 UPackage* Z_Construct_UPackage__Script_aCalcProject();
 // End Cross Module References
 
@@ -38,8 +39,19 @@ struct Z_Construct_UClass_ANetwork_Statics
 		{ "Category", "Neuron" },
 		{ "ModuleRelativePath", "Network.h" },
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_SpawnedNeurons_MetaData[] = {
+		{ "ModuleRelativePath", "Network.h" },
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_MeshComponent_MetaData[] = {
+		{ "Category", "Network" },
+		{ "EditInline", "true" },
+		{ "ModuleRelativePath", "Network.h" },
+	};
 #endif // WITH_METADATA
 	static const UECodeGen_Private::FClassPropertyParams NewProp_NeuronClass;
+	static const UECodeGen_Private::FObjectPropertyParams NewProp_SpawnedNeurons_Inner;
+	static const UECodeGen_Private::FArrayPropertyParams NewProp_SpawnedNeurons;
+	static const UECodeGen_Private::FObjectPropertyParams NewProp_MeshComponent;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 	static UObject* (*const DependentSingletons[])();
 	static constexpr FCppClassTypeInfoStatic StaticCppClassTypeInfo = {
@@ -48,8 +60,14 @@ struct Z_Construct_UClass_ANetwork_Statics
 	static const UECodeGen_Private::FClassParams ClassParams;
 };
 const UECodeGen_Private::FClassPropertyParams Z_Construct_UClass_ANetwork_Statics::NewProp_NeuronClass = { "NeuronClass", nullptr, (EPropertyFlags)0x0014000000000001, UECodeGen_Private::EPropertyGenFlags::Class, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ANetwork, NeuronClass), Z_Construct_UClass_UClass, Z_Construct_UClass_ANeurons_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_NeuronClass_MetaData), NewProp_NeuronClass_MetaData) };
+const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_ANetwork_Statics::NewProp_SpawnedNeurons_Inner = { "SpawnedNeurons", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, Z_Construct_UClass_ANeurons_NoRegister, METADATA_PARAMS(0, nullptr) };
+const UECodeGen_Private::FArrayPropertyParams Z_Construct_UClass_ANetwork_Statics::NewProp_SpawnedNeurons = { "SpawnedNeurons", nullptr, (EPropertyFlags)0x0010000000000000, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ANetwork, SpawnedNeurons), EArrayPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_SpawnedNeurons_MetaData), NewProp_SpawnedNeurons_MetaData) };
+const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_ANetwork_Statics::NewProp_MeshComponent = { "MeshComponent", nullptr, (EPropertyFlags)0x00100000000a0009, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ANetwork, MeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MeshComponent_MetaData), NewProp_MeshComponent_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_ANetwork_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ANetwork_Statics::NewProp_NeuronClass,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ANetwork_Statics::NewProp_SpawnedNeurons_Inner,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ANetwork_Statics::NewProp_SpawnedNeurons,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_ANetwork_Statics::NewProp_MeshComponent,
 };
 static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_ANetwork_Statics::PropPointers) < 2048);
 UObject* (*const Z_Construct_UClass_ANetwork_Statics::DependentSingletons[])() = {
@@ -92,10 +110,10 @@ ANetwork::~ANetwork() {}
 struct Z_CompiledInDeferFile_FID_Users_a1203_Documents_unreal_aCalcProject_Source_aCalcProject_Network_h_Statics
 {
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_ANetwork, ANetwork::StaticClass, TEXT("ANetwork"), &Z_Registration_Info_UClass_ANetwork, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ANetwork), 919754013U) },
+		{ Z_Construct_UClass_ANetwork, ANetwork::StaticClass, TEXT("ANetwork"), &Z_Registration_Info_UClass_ANetwork, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ANetwork), 1732131259U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_a1203_Documents_unreal_aCalcProject_Source_aCalcProject_Network_h_2552215937(TEXT("/Script/aCalcProject"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_a1203_Documents_unreal_aCalcProject_Source_aCalcProject_Network_h_4083595906(TEXT("/Script/aCalcProject"),
 	Z_CompiledInDeferFile_FID_Users_a1203_Documents_unreal_aCalcProject_Source_aCalcProject_Network_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_a1203_Documents_unreal_aCalcProject_Source_aCalcProject_Network_h_Statics::ClassInfo),
 	nullptr, 0,
 	nullptr, 0);

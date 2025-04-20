@@ -23,7 +23,18 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	int32_t Rows = 8;
+	int32_t Cols = 8;
+
 	UPROPERTY(EditAnywhere, Category = "Neuron")
 	TSubclassOf<class ANeurons> NeuronClass;
+
+	UPROPERTY()
+	TArray<ANeurons*> SpawnedNeurons;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* MeshComponent;
 
 };

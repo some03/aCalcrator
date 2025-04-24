@@ -62,5 +62,77 @@ void ANetwork::OnConstruction(const FTransform& Transform)
 				}
 			}
 		}
+
+		for (int32_t i = 0; i < Rows; ++i)
+		{
+			for (int32_t j = 0; j < Cols; ++j)
+			{
+				FVector SpawnLocation(700.0f,i * 100.0f, j * 100.0f);
+				FRotator SpawnRotation = FRotator::ZeroRotator;
+				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
+
+				if (Neuron)
+				{
+					//Neuron->NeuronID = Index;
+					//Neuron->GridPosition = FVector(Row, Col, 0);
+					Neuron->Initialize(FVector(700.0f,i*100,j*100), tau, tau_a, tau_b,
+						gB, gL,
+						W_b, W_hb,
+						W_a, W_ha,
+						W_s, beta, V_th);
+
+					SpawnedNeurons.Add(Neuron);
+					++Index;
+				}
+			}
+		}
+
+		for (int32_t i = 0; i < Rows; ++i)
+		{
+			for (int32_t j = 0; j < Cols; ++j)
+			{
+				FVector SpawnLocation(i*100.0f,j * 100.0f, -100.0f);
+				FRotator SpawnRotation = FRotator::ZeroRotator;
+				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
+
+				if (Neuron)
+				{
+					//Neuron->NeuronID = Index;
+					//Neuron->GridPosition = FVector(Row, Col, 0);
+					Neuron->Initialize(FVector(700.0f,i*100,j*100), tau, tau_a, tau_b,
+						gB, gL,
+						W_b, W_hb,
+						W_a, W_ha,
+						W_s, beta, V_th);
+
+					SpawnedNeurons.Add(Neuron);
+					++Index;
+				}
+			}
+		}
+
+		for (int32_t i = 0; i < Rows; ++i)
+		{
+			for (int32_t j = 0; j < Cols; ++j)
+			{
+				FVector SpawnLocation(i*100.0f,j * 100.0f, 800.0f);
+				FRotator SpawnRotation = FRotator::ZeroRotator;
+				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
+
+				if (Neuron)
+				{
+					//Neuron->NeuronID = Index;
+					//Neuron->GridPosition = FVector(Row, Col, 0);
+					Neuron->Initialize(FVector(700.0f,i*100,j*100), tau, tau_a, tau_b,
+						gB, gL,
+						W_b, W_hb,
+						W_a, W_ha,
+						W_s, beta, V_th);
+
+					SpawnedNeurons.Add(Neuron);
+					++Index;
+				}
+			}
+		}
 	}
 }

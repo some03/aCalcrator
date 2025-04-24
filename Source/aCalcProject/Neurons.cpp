@@ -44,7 +44,7 @@ void ANeurons::Initialize(FVector LogicalPosition,
 	double W_a_, double W_ha_,
 	double W_s_, double beta_, double V_th_)
 {
-	SetActorLocation(LogicalPosition);
+	//SetActorLocation(LogicalPosition);
 
 	x = LogicalPosition.X;
 	y = LogicalPosition.Y;

@@ -14,7 +14,7 @@ ASensorgrid::ASensorgrid()
 	USceneComponent* SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = SceneRoot;
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneAsset(TEXT("/Engine/BasicShapes/Plane"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MatAsset(TEXT("/Game/SimBlank/Materials/iogridcell"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MatAsset(TEXT("/Game/SimBlank/Materials/BaseMaterial"));
 	
 	if (MatAsset.Succeeded())
 	{

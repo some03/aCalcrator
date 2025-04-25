@@ -11,19 +11,48 @@ ANetwork::ANetwork()
 
 }
 
-// Called when the game starts or when spawned
+// Fix for E0415 and E0300 errors
 void ANetwork::BeginPlay()
 {
 	Super::BeginPlay();
 
+	for (int i = 0; i < SpawnedNeurons.Num(); i++) {
+		for (int j = i + 1; j < SpawnedNeurons.Num(); j++) {
 
-	
+			float dist = FVector::Dist(SpawnedNeurons[i]->GetActorLocation(), SpawnedNeurons[j]->GetActorLocation());
+			if (dist < 200.f) {
+				// ‹ß‚¢ƒjƒ…[ƒƒ““¯Žm‚ðŒ‹‚Ôˆ—
+
+				FVector start = SpawnedNeurons[i]->GetActorLocation();
+				FVector end = SpawnedNeurons[j]->GetActorLocation();
+
+				ASynapse* Synapse = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
+				SynapseMap.Add(FIntPoint(i, j), Synapse);
+				if (dist < 100.f)Synapse->SynapseLineInit(start, end, true);
+				else Synapse->SynapseLineInit(start, end, false);
+
+
+
+
+
+			}
+		
+		}
+	}
 }
 
 // Called every frame
 void ANetwork::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	int dt = 1;
+	int time = 20;
+
+	for (int i = 0;i < time;i += dt) {
+	}
+
+
 
 }
 void ANetwork::OnConstruction(const FTransform& Transform)

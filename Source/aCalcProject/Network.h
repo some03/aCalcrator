@@ -1,9 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include"Neurons.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Neurons.h"
+#include "Synapse.h"
+#include "Math/IntPoint.h"
 #include "Network.generated.h"
 
 
@@ -36,5 +38,13 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Synapse")
+	TSubclassOf<class ASynapse> SynapseClass;
+
+	//UPROPERTY()
+	//TArray<ASynapse*> SpawnedSynapses;
+	//std::map<std::pair<int, int>, ASynapse*> SynapseMap;
+	TMap<FIntPoint, ASynapse*>SynapseMap;
 
 };

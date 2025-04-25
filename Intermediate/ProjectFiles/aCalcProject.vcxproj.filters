@@ -71,5 +71,11 @@
     <ClCompile Include="..\..\Source\aCalcProject\Sensorgrid.h">
       <Filter>Source\aCalcProject</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\Synapse.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\Synapse.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

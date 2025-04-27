@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include"UObject/ConstructorHelpers.h"
 #include "Neurons.h"
 
 // Sets default values
@@ -18,7 +18,12 @@ ANeurons::ANeurons()
 	if (MeshAsset.Succeeded())
 	{
 		Mesh->SetStaticMesh(MeshAsset.Object);
-		Mesh->SetWorldScale3D(FVector(0.3f)); // ’¼Œa‚ğ30%‚Ék¬
+		Mesh->SetWorldScale3D(FVector(0.2f)); // ’¼Œa‚ğ30%‚Ék¬
+	}
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("/Game/SimBlank/Materials/BaseMaterial"));
+	if (MaterialAsset.Succeeded())
+	{
+		Mesh->SetMaterial(0, MaterialAsset.Object);
 	}
 
 }
@@ -72,7 +77,7 @@ double ANeurons::Sigmoid(double o, double b)
 {
 	return 1.0 / (1.0 + exp(-b * o));
 }
-void ANeurons::SimulateStep(double S_in_basal, double S_in_apical, double rec, double dt)
+void ANeurons::Update(double S_in_basal, double S_in_apical, double rec, double dt)
 {
 	V_b += (W_b * S_in_basal + W_hb * rec - V_b) / tau_b;
 	V_a += (W_a * S_in_apical + W_ha * rec - V_a) / tau_a;
@@ -84,15 +89,27 @@ void ANeurons::SimulateStep(double S_in_basal, double S_in_apical, double rec, d
 	S_h = Heviside(U, V_th);
 	if (S_h == 1) stdptime = dt;
 
-	UpdateVisuals();
+	UpdateVisuals(0);
 }
-void ANeurons::UpdateVisuals()
+void ANeurons::UpdateVisuals(bool ext)
 {
 	auto Mat = Mesh->CreateAndSetMaterialInstanceDynamic(0);
 	if (Mat)
 	{
-		FLinearColor Color = (S_h == 1) ? FLinearColor::Red : FLinearColor::Blue;
-		Mat->SetVectorParameterValue("BaseColor", Color);
+
+		if(S_h == 1){
+			FLinearColor Color=FLinearColor::Red;
+			if (sensor)Color = FLinearColor::Blue;
+
+			Color.A = 0.3f;
+			Mat->SetVectorParameterValue("Color", Color);
+		}
+		if (ext) {
+			FLinearColor Color = FLinearColor::Green;
+
+			Color.A = 0.3f;
+			Mat->SetVectorParameterValue("Color", Color);
+		}
 	}
 }
 

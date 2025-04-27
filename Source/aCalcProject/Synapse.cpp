@@ -4,6 +4,7 @@
 #include "Synapse.h"
 #include "Components/SplineMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "UObject/ConstructorHelpers.h"
 
 // Sets default values
 ASynapse::ASynapse()
@@ -13,6 +14,12 @@ ASynapse::ASynapse()
         Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
         Spline->SetMobility(EComponentMobility::Movable);
         RootComponent = Spline;
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("/Game/SimBlank/Materials/BaseMaterial"));
+	if (MaterialAsset.Succeeded())
+	{
+		LineMaterial=MaterialAsset.Object;
+	}
+
 }
 
 
@@ -50,13 +57,14 @@ void ASynapse::SynapseLineInit(FVector Start, FVector End, bool apical)
 	SplineMesh->SetStartAndEnd(Start, StartTangent, End, EndTangent);
 	UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(LineMaterial, this);
 
+
 	if (apical)
 	{
-		DynMat->SetVectorParameterValue(FName("Color"), FLinearColor::Red);
+		DynMat->SetVectorParameterValue(FName("Color"), FLinearColor::Yellow);
 	}
 	else
 	{
-		DynMat->SetVectorParameterValue(FName("Color"), FLinearColor::Blue);
+		DynMat->SetVectorParameterValue(FName("Color"), FLinearColor::Gray);
 	}
 	SplineMesh->SetMaterial(0, DynMat);
 }

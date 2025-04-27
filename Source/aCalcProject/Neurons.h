@@ -30,7 +30,7 @@ public:
 		double W_a_, double W_ha_,
 		double W_s_, double beta_, double V_th_);
 
-	void SimulateStep(double S_in_basal, double S_in_apical, double rec, double dt);
+	void Update(double S_in_basal, double S_in_apical, double rec, double dt);
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
@@ -45,10 +45,11 @@ public:
 	double V_b = 0.0, V_a = 0.0, U = 0.0;
 	double S_h = 0;
 	double stdptime = 0.0;
+	bool sensor = 0.0;
 
 	int Heviside(double r, double threshold);
 	double Sigmoid(double o, double b);
-	void UpdateVisuals(); // 色やスケール変化
+	void UpdateVisuals(bool ext); // 色やスケール変化
 
 
 };

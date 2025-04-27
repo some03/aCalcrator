@@ -5,6 +5,9 @@
 #include "GameFramework/Actor.h"
 #include "Neurons.h"
 #include "Synapse.h"
+#include "vector"
+#include "string"
+#include "Math/UnrealMathUtility.h"
 #include "Math/IntPoint.h"
 #include "Network.generated.h"
 
@@ -46,5 +49,17 @@ public:
 	//TArray<ASynapse*> SpawnedSynapses;
 	//std::map<std::pair<int, int>, ASynapse*> SynapseMap;
 	TMap<FIntPoint, ASynapse*>SynapseMap;
+
+	TArray<TArray<int>> createBitmap(int note, int gridSize);
+	void stdpUpdate(int i);
+
+	int dt = 0;
+	int time = 1;
+	double s_in_basal = 0;
+	double s_in_apical = 0;
+	TArray<TArray<int>>input;
+	TArray<TArray<int>>sensor;
+	bool feedback = false;
+
 
 };

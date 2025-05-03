@@ -47,6 +47,18 @@
     <ClCompile Include="..\..\Source\aCalcProject\aCalcProjectGameModeBase.h">
       <Filter>Source\aCalcProject</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\DigitSample.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\DigitSample.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\DigitsDataLoader.cpp">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\aCalcProject\DigitsDataLoader.h">
+      <Filter>Source\aCalcProject</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\aCalcProject\Iogrid.cpp">
       <Filter>Source\aCalcProject</Filter>
     </ClCompile>

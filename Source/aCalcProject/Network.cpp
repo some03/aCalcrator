@@ -1,7 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Network.h"
+#include "DigitsDataLoader.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "HAL/PlatformFilemanager.h"
 
 // Sets default values
 ANetwork::ANetwork()
@@ -17,6 +21,60 @@ void ANetwork::BeginPlay()
 	Super::BeginPlay();
 	dt = 0;
 	feedback = false;
+
+	DigitsDataLoader DataLoader;
+	if (DataLoader.LoadOptDigits(TEXT("Data/optdigits.txt")))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Loaded %d samples"), DataLoader.Samples.Num());
+		DataLoader.GeneratePoissonSpikes(100, 1);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load samples"));
+		return;
+	}
+
+/*
+	// Content ãƒ•ã‚©ãƒ«ãƒ€ã¸ã®çµ¶å¯¾ãƒ‘ã‚¹ã‚’çµ„ã¿ç«‹ã¦
+	FString FilePath = FPaths::ProjectContentDir() / TEXT("Data/optdigits.txt");
+
+
+	// ã¾ãšãƒ•ã‚¡ã‚¤ãƒ«ã®å­˜åœ¨ãƒã‚§ãƒƒã‚¯
+	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("File not found: %s"), *FilePath);
+		return;
+	}
+
+	// è¡Œã”ã¨ã«èª­ã¿è¾¼ã‚€
+	TArray<FString> Lines;
+	if (FFileHelper::LoadFileToStringArray(Lines, *FilePath))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Loaded %d lines from %s"), Lines.Num(), *FilePath);
+		for (const FString& Line : Lines)
+		{
+			// ã‚«ãƒ³ãƒã§åˆ†å‰²
+			TArray<FString> Cells;
+			Line.ParseIntoArray(Cells, TEXT(","), true);
+
+			// 0ã€œ63 ãŒç”»ç´ å€¤ã€64 ãŒãƒ©ãƒ™ãƒ«
+			TArray<float> Pixels;
+			Pixels.Reserve(64);
+			for (int32 i = 0; i < 64; ++i)
+			{
+				float v = FCString::Atof(*Cells[i]) / 16.0f;  // æ­£è¦åŒ–
+				Pixels.Add(v);
+			}
+			int32 Label = FCString::Atoi(*Cells[64]);
+			// ã“ã“ã§Pixels, Labelã‚’Poissonã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰â†’SNNã¸æ¸¡ã™
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load file: %s"), *FilePath);
+	}
+*/
+
 	
 
 	for (int i = 0;i < Cols * Rows;i++) {
@@ -121,7 +179,7 @@ void ANetwork::OnConstruction(const FTransform& Transform)
 
 	if (NeuronClass)
 	{
-		// –Ê‚²‚Æ‚Éİ’è‚ğ‚Â
+		// é¢ã”ã¨ã«è¨­å®šã‚’æŒã¤
 		struct FSurfaceSetting
 		{
 			FVector BaseOffset;
@@ -129,14 +187,14 @@ void ANetwork::OnConstruction(const FTransform& Transform)
 			FVector YStep;
 		};
 
-		// ¶–ÊE‰E–ÊE’ê–ÊE“V–Ê‚Ìİ’è
+		// å·¦é¢ãƒ»å³é¢ãƒ»åº•é¢ãƒ»å¤©é¢ã®è¨­å®š
 		TArray<FSurfaceSetting> SurfaceSettings = {
-			{ FVector(0.0f, 0.0f, 0.0f),    FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // ¶–Ê
-			{ FVector(800.0f, 0.0f, 0.0f), FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // ’†‰›–Ê
-			{ FVector(1600.0f, 0.0f, 0.0f),  FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // ‰E–Ê
-			{ FVector(0.0f, 0.0f, -200.0f), FVector(200.0f, 0.0f, 0.0f), FVector(0.0f, 200.0f, 0.0f) }, // ’ê–Ê
+			{ FVector(0.0f, 0.0f, 0.0f),    FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // å·¦é¢
+			{ FVector(800.0f, 0.0f, 0.0f), FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // ä¸­å¤®é¢
+			{ FVector(1600.0f, 0.0f, 0.0f),  FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // å³é¢
+			{ FVector(0.0f, 0.0f, -200.0f), FVector(200.0f, 0.0f, 0.0f), FVector(0.0f, 200.0f, 0.0f) }, // åº•é¢
 
-			//{ FVector(0.0f, 0.0f, 800.0f),  FVector(100.0f, 0.0f, 0.0f), FVector(0.0f, 100.0f, 0.0f) }, // “V–Ê
+			//{ FVector(0.0f, 0.0f, 800.0f),  FVector(100.0f, 0.0f, 0.0f), FVector(0.0f, 100.0f, 0.0f) }, // å¤©é¢
 		};
 
 		for (const FSurfaceSetting& Surface : SurfaceSettings)
@@ -166,51 +224,14 @@ void ANetwork::OnConstruction(const FTransform& Transform)
 
 	}
 }
-TArray<TArray<int>> ANetwork::createBitmap(int note, int gridSize) {
-	if (note < 0 || note > 127) {
-		UE_LOG(LogTemp, Warning, TEXT("Invalid note value: %d"), note);
-		return TArray<TArray<int>>();
-	}
-
-	// MIDIƒm[ƒg‚ğ7ƒrƒbƒg‚Ì2i”‚É•ÏŠ·
-	FString bitstream = "";
-	for (int i = 6; i >= 0; --i) {
-		bitstream += ((note >> i) & 1) ? '1' : '0';
-	}
-
-	// ƒrƒbƒgƒXƒgƒŠ[ƒ€‚Ì’·‚³‚ğ gridSize^2 ‚É‡‚í‚¹‚é
-	int totalBits = gridSize * gridSize;
-	if (bitstream.Len() < totalBits) {
-		// Replace the problematic line with the following code:
-		bitstream.Append(FString::ChrN(totalBits - bitstream.Len(), '0'));
-	}
-	else if (bitstream.Len() > totalBits) {
-		bitstream = bitstream.Mid(0, totalBits);
-	}
-
-	// 2ŸŒ³ƒOƒŠƒbƒh‚É•ÏŠ·
-	TArray<TArray<int>> grid;
-	grid.SetNum(gridSize);
-	for (int i = 0; i < gridSize; ++i)
-	{
-		grid[i].SetNum(gridSize);
-	}
-	for (int i = 0; i < totalBits; ++i) {
-		int row = i / gridSize;
-		int col = i % gridSize;
-		grid[row][col] = bitstream[i] - '0';
-	}
-
-	return grid;
-}
 void ANetwork::stdpUpdate(int i) {
-	// STDP‚ÌXVƒ‹[ƒ‹‚ÉŠî‚Ã‚¢‚ÄƒVƒiƒvƒX‚Ìd‚İ‚ğXV
-	double delta_t = 0.1; // ŠÔ·
-	double A_plus = 0.005; // ‘‰Á‚ÌŠwK—¦
-	double A_minus = 0.005; // Œ¸­‚ÌŠwK—¦
-	double tau_plus = 20.0; // ‘‰Á‚ÌŠÔ’è”
-	double tau_minus = 20.0; // Œ¸­‚ÌŠÔ’è”
-	double limit = 5; // ƒVƒiƒvƒX‚Ìd‚İ‚ÌãŒÀ
+	// STDPã®æ›´æ–°ãƒ«ãƒ¼ãƒ«ã«åŸºã¥ã„ã¦ã‚·ãƒŠãƒ—ã‚¹ã®é‡ã¿ã‚’æ›´æ–°
+	double delta_t = 0.1; // æ™‚é–“å·®
+	double A_plus = 0.005; // å¢—åŠ ã®å­¦ç¿’ç‡
+	double A_minus = 0.005; // æ¸›å°‘ã®å­¦ç¿’ç‡
+	double tau_plus = 20.0; // å¢—åŠ ã®æ™‚é–“å®šæ•°
+	double tau_minus = 20.0; // æ¸›å°‘ã®æ™‚é–“å®šæ•°
+	double limit = 5; // ã‚·ãƒŠãƒ—ã‚¹ã®é‡ã¿ã®ä¸Šé™
 
 	for (int j = 0;j < SpawnedNeurons.Num();j++) {
 		delta_t = SpawnedNeurons[i]->stdptime - SpawnedNeurons[j]->stdptime;

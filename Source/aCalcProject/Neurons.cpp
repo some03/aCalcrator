@@ -18,7 +18,7 @@ ANeurons::ANeurons()
 	if (MeshAsset.Succeeded())
 	{
 		Mesh->SetStaticMesh(MeshAsset.Object);
-		Mesh->SetWorldScale3D(FVector(0.2f)); // ’¼Œa‚ğ30%‚Ék¬
+		Mesh->SetWorldScale3D(FVector(0.3f)); // ’¼Œa‚ğ30%‚Ék¬
 	}
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("/Game/SimBlank/Materials/BaseMaterial"));
 	if (MaterialAsset.Succeeded())
@@ -41,20 +41,13 @@ void ANeurons::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-void ANeurons::Initialize(FVector LogicalPosition,
-	double tau_, double tau_a_, double tau_b_,
+void ANeurons::Initialize(double tau_, double tau_a_, double tau_b_,
 	double gB_, double gL_,
 	double W_b_, double W_hb_,
 	double W_a_, double W_ha_,
-	double W_s_, double beta_, double V_th_)
+	double W_s_, double beta_, double V_th_,bool type)
 {
 	//SetActorLocation(LogicalPosition);
-
-	x = LogicalPosition.X;
-	y = LogicalPosition.Y;
-	z = LogicalPosition.Z;
-
-
 	tau = tau_;
 	tau_a = tau_a_;
 	tau_b = tau_b_;
@@ -67,6 +60,11 @@ void ANeurons::Initialize(FVector LogicalPosition,
 	W_s = W_s_;
 	beta = beta_;
 	V_th = V_th_;
+
+	if (type)UpdateVisuals(0); // 0:’Êí‚Ìƒjƒ…[ƒƒ“
+	else UpdateVisuals(1); // 1:ƒZƒ“ƒT[
+
+	
 }
 int ANeurons::Heviside(double r, double threshold)
 {
@@ -89,9 +87,16 @@ void ANeurons::Update(double S_in_basal, double S_in_apical, double rec, double 
 	S_h = Heviside(U, V_th);
 	if (S_h == 1) stdptime = dt;
 
-	UpdateVisuals(0);
+	UpdateVisuals(1);
 }
-void ANeurons::UpdateVisuals(bool ext)
+void ANeurons::LIFUpdate(double rec,double dt)
+{
+	lifv += (lifr*rec - lifv) *dt/ tau;
+	S_h = Heviside(lifv, V_th);
+	if (S_h == 1) stdptime = dt;
+	UpdateVisuals(2);
+}
+void ANeurons::UpdateVisuals(int num)
 {
 	auto Mat = Mesh->CreateAndSetMaterialInstanceDynamic(0);
 	if (Mat)
@@ -104,9 +109,24 @@ void ANeurons::UpdateVisuals(bool ext)
 			Color.A = 0.3f;
 			Mat->SetVectorParameterValue("Color", Color);
 		}
-		if (ext) {
+		if (num==0) {
 			FLinearColor Color = FLinearColor::Green;
 
+			Color.A = 0.3f;
+			Mat->SetVectorParameterValue("Color", Color);
+		}
+		else if (num == 1) {
+			FLinearColor Color = FLinearColor::Blue;
+			Color.A = 0.3f;
+			Mat->SetVectorParameterValue("Color", Color);
+		}
+		else if (num == 2) {
+			FLinearColor Color = FLinearColor::Yellow;
+			Color.A = 0.3f;
+			Mat->SetVectorParameterValue("Color", Color);
+		}
+		else if (num == 3) {
+			FLinearColor Color = FLinearColor::Black;
 			Color.A = 0.3f;
 			Mat->SetVectorParameterValue("Color", Color);
 		}

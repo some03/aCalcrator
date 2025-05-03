@@ -19,6 +19,11 @@ ASynapse::ASynapse()
 	{
 		LineMaterial=MaterialAsset.Object;
 	}
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Engine/BasicShapes/Cylinder"));
+	if (MeshAsset.Succeeded())
+	{
+		LineMesh = MeshAsset.Object;
+	}
 
 }
 
@@ -27,6 +32,8 @@ ASynapse::ASynapse()
 void ASynapse::BeginPlay()
 {
 	Super::BeginPlay();
+	Spline->SetVisibility(false /*bNewVisibility*/, false /*bPropagateToChildren*/);
+
 	
 }
 
@@ -38,34 +45,95 @@ void ASynapse::Tick(float DeltaTime)
 }
 void ASynapse::SynapseLineInit(FVector Start, FVector End, bool apical)
 {
+	// 1) Spline を Local 座標で設定
 	Spline->ClearSplinePoints();
-	Spline->AddSplinePoint(Start, ESplineCoordinateSpace::World);
-	Spline->AddSplinePoint(End, ESplineCoordinateSpace::World);
-	Spline->SetSplinePointType(0, ESplinePointType::Linear);
-	Spline->SetSplinePointType(1, ESplinePointType::Linear);
+	FVector LocalStart = Start - GetActorLocation();
+	FVector LocalEnd = End - GetActorLocation();
+	Spline->AddSplinePoint(LocalStart, ESplineCoordinateSpace::Local);
+	Spline->AddSplinePoint(LocalEnd, ESplineCoordinateSpace::Local);
+	Spline->UpdateSpline();
 
-	USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this);
-	SplineMesh->SetMobility(EComponentMobility::Movable);
-	SplineMesh->SetStaticMesh(LineMesh);
-	SplineMesh->SetMaterial(0, LineMaterial);
-	SplineMesh->RegisterComponentWithWorld(GetWorld());
-	SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+	// 2) SplineMeshComponent を生成
+	USplineMeshComponent* Mesh = NewObject<USplineMeshComponent>(this);
+	Mesh->SetMobility(EComponentMobility::Movable);
+	Mesh->SetStaticMesh(LineMesh);
+	Mesh->SetForwardAxis(ESplineMeshAxis::Z);
+	Mesh->SetAbsolute(false, false, true);  // スケールはワールド固定
 
-	FVector StartTangent = Spline->GetTangentAtSplinePoint(0, ESplineCoordinateSpace::World);
-	FVector EndTangent = Spline->GetTangentAtSplinePoint(1, ESplineCoordinateSpace::World);
+	// マテリアル設定
 
-	SplineMesh->SetStartAndEnd(Start, StartTangent, End, EndTangent);
-	UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(LineMaterial, this);
+	FLinearColor CyanColor(0.3f, 0.3f, 0.3f, 0.1f);;
+	auto DynMat = UMaterialInstanceDynamic::Create(LineMaterial, this);
+	DynMat->SetVectorParameterValue("Color", apical ? CyanColor: FLinearColor::Gray);
+	Mesh->SetMaterial(0, DynMat);
 
+	// アタッチ＆登録
+	Mesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+	Mesh->RegisterComponentWithWorld(GetWorld());
 
-	if (apical)
-	{
-		DynMat->SetVectorParameterValue(FName("Color"), FLinearColor::Yellow);
-	}
-	else
-	{
-		DynMat->SetVectorParameterValue(FName("Color"), FLinearColor::Gray);
-	}
-	SplineMesh->SetMaterial(0, DynMat);
+	// 3) タンジェントを自前計算してセット
+	FVector Dir = LocalEnd - LocalStart;
+	FVector Tangent = Dir * 0.5f;  // 長すぎず短すぎず
+	Mesh->SetStartAndEnd(LocalStart, Tangent, LocalEnd, Tangent, true);
+
+	// 4) 太さ設定
+	Mesh->SetStartScale(FVector2D(0.02f, 0.02f));
+	Mesh->SetEndScale(FVector2D(0.02f, 0.02f));
 }
+void ASynapse::CurveLineInit(FVector Start, FVector End, FVector Control)
+{
+	// 1) Spline を Local 座標で初期化
+	Spline->ClearSplinePoints();
+	FVector LocalStart = Start - GetActorLocation();
+	FVector LocalControl = Control - GetActorLocation();
+	FVector LocalEnd = End - GetActorLocation();
+	Spline->AddSplinePoint(LocalStart, ESplineCoordinateSpace::Local);
+	Spline->AddSplinePoint(LocalControl, ESplineCoordinateSpace::Local);
+	Spline->AddSplinePoint(LocalEnd, ESplineCoordinateSpace::Local);
+	Spline->UpdateSpline();
+
+	// 共通設定用ラムダ
+	auto CreateMeshSegment = [&](int32 PointIndex, bool bApical)
+		{
+			USplineMeshComponent* Mesh = NewObject<USplineMeshComponent>(this);
+			Mesh->SetMobility(EComponentMobility::Movable);
+			Mesh->SetStaticMesh(LineMesh);
+			Mesh->SetForwardAxis(ESplineMeshAxis::Z);
+			// 親（Spline）のスケールを拾わない
+			Mesh->SetAbsolute(false, /*bAbsRot=*/false, /*bAbsScale=*/true);
+
+			// マテリアル
+			UMaterialInstanceDynamic* Dyn = UMaterialInstanceDynamic::Create(LineMaterial, this);
+
+			FLinearColor CyanColor(0.3f, 0.3f, 0.3f, 0.1f);;
+			Dyn->SetVectorParameterValue(FName("Color"), CyanColor);
+			Mesh->SetMaterial(0, Dyn);
+
+			// Attach → Register
+			Mesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+			Mesh->RegisterComponentWithWorld(GetWorld());
+
+			// セグメントの開始/終了位置とタンジェントを取得
+			FVector StartPos = Spline->GetLocationAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local);
+			FVector EndPos = Spline->GetLocationAtSplinePoint(PointIndex + 1, ESplineCoordinateSpace::Local);
+			FVector StartTan = Spline->GetTangentAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local);
+			FVector EndTan = Spline->GetTangentAtSplinePoint(PointIndex + 1, ESplineCoordinateSpace::Local);
+
+			Mesh->SetStartAndEnd(
+				StartPos, StartTan,
+				EndPos, EndTan,
+				/*bUpdateSpline=*/true
+			);
+
+			// 太さ
+			Mesh->SetStartScale(FVector2D(0.02f, 0.02f));
+			Mesh->SetEndScale(FVector2D(0.02f, 0.02f));
+		};
+
+	// 2セグメント分それぞれ生成
+	CreateMeshSegment(0, true);  // Start → Control
+	CreateMeshSegment(1, true);  // Control → End
+
+}
+
 

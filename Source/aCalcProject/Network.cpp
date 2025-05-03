@@ -16,25 +16,88 @@ void ANetwork::BeginPlay()
 {
 	Super::BeginPlay();
 	dt = 0;
+	feedback = false;
+	
 
-	for (int i = 0; i < SpawnedNeurons.Num(); i++) {
-		for (int j = i + 1; j < SpawnedNeurons.Num(); j++) {
+	for (int i = 0;i < Cols * Rows;i++) {
 
-			float dist = FVector::Dist(SpawnedNeurons[i]->GetActorLocation(), SpawnedNeurons[j]->GetActorLocation());
-			if (dist < 200.f) {
-				// 近いニューロン同士を結ぶ処理
+		int index = Cols * Rows*2;
+		int midindex = Cols * Rows;
+		if (!(SpawnedNeurons.IsValidIndex(i + index) && SpawnedNeurons.IsValidIndex(i + midindex)))break;
 
-				FVector start = SpawnedNeurons[i]->GetActorLocation();
-				FVector end = SpawnedNeurons[j]->GetActorLocation();
 
-				ASynapse* Synapse = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
-				SynapseMap.Add(FIntPoint(i, j), Synapse);
-				if (dist < 100.f)Synapse->SynapseLineInit(start, end, true);
-				else Synapse->SynapseLineInit(start, end, false);
+		FVector start = SpawnedNeurons[i]->GetActorLocation();
+		FVector end = SpawnedNeurons[i+index]->GetActorLocation();
+		FVector midpoint_1 = (start + end) * 0.5f + FVector(0, 0, 200);
+		FVector midpoint_2 = (start + end) * 0.5f + FVector(0, 0, -200);
 
-			}
+		ASynapse* Synapse_1 = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
+		ASynapse* Synapse_2 = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
+		if (Synapse_1&&Synapse_2)
+		{
+			Synapse_1->CurveLineInit(start, end, midpoint_1);
+			Synapse_2->CurveLineInit(start, end, midpoint_2);
+			SynapseMap.Add(FIntPoint(i, i + index), Synapse_1);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to spawn synapse1,2"));
+		}
+
+
+		start = SpawnedNeurons[i]->GetActorLocation();
+		end = SpawnedNeurons[i+midindex]->GetActorLocation();
+		ASynapse* Synapse_3 = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
+
+		if (Synapse_3) {
+
+			SynapseMap.Add(FIntPoint(i,i+midindex), Synapse_3);
+			Synapse_3->SynapseLineInit(start, end, true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to spawn synapse3"));
 
 		}
+
+		start = SpawnedNeurons[i+index]->GetActorLocation();
+		end = SpawnedNeurons[i+midindex]->GetActorLocation();
+		ASynapse* Synapse_4 = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
+
+		if (Synapse_4) {
+
+			SynapseMap.Add(FIntPoint(i+index, i+midindex), Synapse_4);
+			Synapse_4->SynapseLineInit(start, end, true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to spawn synapse4"));
+
+		}
+
+
+		for (int j = Cols * Rows * 3;j < SpawnedNeurons.Num();j++) {
+
+			start = SpawnedNeurons[i+midindex]->GetActorLocation();
+			end = SpawnedNeurons[j]->GetActorLocation();
+
+			ASynapse* Synapse_5 = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
+
+		if (Synapse_5) {
+
+			SynapseMap.Add(FIntPoint(i+midindex, j), Synapse_5);
+			Synapse_5->SynapseLineInit(start, end, true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to spawn synapse5"));
+
+		}
+
+		}
+
+
+
 	}
 }
 
@@ -43,169 +106,6 @@ void ANetwork::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	double tau = 2.0, tau_a = 2.0, tau_b = 2.0;
-	double gB = 1.0, gL = 1.0;
-	double W_b = 0.8, W_hb = 0.5, W_a = 0.7, W_ha = 0.5, W_s = 0.9;
-	double beta = 1.0, V_th = 1.0;
-
-	input = createBitmap(120, 8);
-
-	if (input.Num() == 0 || input[0].Num() == 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("input bitmap generation failed!"));
-		return; // クラッシュ防止にここで抜ける
-	}
-	sensor.SetNum(8);
-	for (int i = 0; i < 8; ++i)
-	{
-		sensor[i].Init(0, 8);
-	}
-
-	while(dt<time) {
-
-		int ioneuron = SpawnedNeurons.Num();
-		int rec = 0;
-
-		if (!feedback) {
-			for (int i = 0;i < ioneuron;i++) {
-				if ((SpawnedNeurons[i]->x <= 200) && (SpawnedNeurons[i]->z <= 700) && ((SpawnedNeurons[i]->z >= 0))) {
-					int yId = SpawnedNeurons[i]->y / 100;
-					int zId = SpawnedNeurons[i]->z / 100;
-
-					s_in_apical = input[yId][zId];
-					if (SpawnedNeurons[i]->x == 0)s_in_basal = input[yId][zId];
-					if (s_in_apical || s_in_basal) {
-						SpawnedNeurons[i]->UpdateVisuals(1);
-						UE_LOG(LogTemp, Log, TEXT("fire"));
-
-					}
-				}
-				else if ((SpawnedNeurons[i]->z == 800)) {
-					s_in_basal = 1;
-					s_in_apical = 1;
-
-				}
-				for (int j = 0;j < ioneuron;j++) {
-					if (i == j)continue;
-
-					ASynapse** SynapsePtr = SynapseMap.Find(FIntPoint(i, j));
-					if (SynapsePtr && *SynapsePtr)
-					{
-						if (!SpawnedNeurons[i]->sensor)SynapseMap[{i, j}]->w *= 1.5;
-						rec += (*SynapsePtr)->w * SpawnedNeurons[j]->S_h;
-					}
-					else rec +=0;
-
-				}
-				SpawnedNeurons[i]->Update(s_in_basal, s_in_apical, rec, dt);
-				if (SpawnedNeurons[i]->S_h == 1) {
-					stdpUpdate(i);
-					SpawnedNeurons[i]->sensor = 1;
-					if (SpawnedNeurons[i]->z == 0) {
-
-						int yId = SpawnedNeurons[i]->y / 100;
-						int zId = SpawnedNeurons[i]->z / 100;
-						sensor[yId][zId] = 1;
-
-
-					}
-
-				}
-
-
-			}
-		}
-		else {
-			for (int i = 0;i < SpawnedNeurons.Num();i++) {
-
-				if ((SpawnedNeurons[i]->x >= 600) && (SpawnedNeurons[i]->z <= 700) && ((SpawnedNeurons[i]->z >= 0))) {
-
-					int yId = SpawnedNeurons[i]->y / 100;
-					int zId = SpawnedNeurons[i]->z / 100;
-
-					s_in_basal = sensor[yId][zId];
-
-					if (SpawnedNeurons[i]->x == 800)s_in_basal = input[yId][zId];
-				}
-				for (int j = 0;j < ioneuron;j++) {
-					if (i == j)continue;
-					ASynapse** SynapsePtr = SynapseMap.Find(FIntPoint(i, j));
-					if (SynapsePtr && *SynapsePtr)
-					{
-						if (!SpawnedNeurons[i]->sensor)SynapseMap[{i, j}]->w *= 1.5;
-						rec += (*SynapsePtr)->w * SpawnedNeurons[j]->S_h;
-					}
-					else rec +=0;
-
-				}
-				SpawnedNeurons[i]->Update(s_in_basal, s_in_apical, rec, dt);
-				if (SpawnedNeurons[i]->S_h == 1) {
-					stdpUpdate(i);
-
-				}
-			}
-			sensor.Empty();
-
-		}
-		if (SpawnedNeurons.Num() < 500) {
-			if (feedback) {
-				for (int y = 0;y < Rows;y++) {
-					for (int z = 0;z < Cols;z++) {
-						if (sensor[y][z] == 1) {
-							int32 randomy = FMath::RandRange(100 * y - 100, 100 * y);
-							int32 randomz = FMath::RandRange(100 * z - 100, 100 * z);
-							int32 randomx = FMath::RandRange(100, 600);
-
-							FVector SpawnLocation(randomx, randomy, randomz);
-							FRotator SpawnRotation = FRotator::ZeroRotator;
-							ANeurons* Neuron = GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
-
-							if (Neuron)
-							{
-								//Neuron->NeuronID = Index;
-								//Neuron->GridPosition = FVector(Row, Col, 0);
-								Neuron->Initialize(FVector(randomx, randomy, randomz), tau, tau_a, tau_b,
-									gB, gL,
-									W_b, W_hb,
-									W_a, W_ha,
-									W_s, beta, V_th);
-
-								SpawnedNeurons.Add(Neuron);
-							}
-						}
-
-					}
-				}
-
-				for (int i = 0; i < ioneuron; i++) {
-					for (int j = ioneuron; j < SpawnedNeurons.Num(); j++) {
-
-						float dist = FVector::Dist(SpawnedNeurons[i]->GetActorLocation(), SpawnedNeurons[j]->GetActorLocation());
-						if (dist < 200.f) {
-							// 近いニューロン同士を結ぶ処理
-
-							FVector start = SpawnedNeurons[i]->GetActorLocation();
-							FVector end = SpawnedNeurons[j]->GetActorLocation();
-
-							ASynapse* Synapse = GetWorld()->SpawnActor<ASynapse>(ASynapse::StaticClass(), start, FRotator::ZeroRotator);
-							SynapseMap.Add(FIntPoint(i, j), Synapse);
-							if (dist < 100.f)Synapse->SynapseLineInit(start, end, true);
-							else Synapse->SynapseLineInit(start, end, false);
-
-						}
-
-					}
-				}
-
-
-
-			}
-
-		}
-		feedback = !feedback;
-		dt++;
-
-	}
 
 
 
@@ -219,101 +119,51 @@ void ANetwork::OnConstruction(const FTransform& Transform)
 	double W_b = 0.8, W_hb = 0.5, W_a = 0.7, W_ha = 0.5, W_s = 0.9;
 	double beta = 1.0, V_th = 1.0;
 
-	int32 Index = 0;
-	// ニューロンのスポーン
 	if (NeuronClass)
 	{
-		for (int32_t i = 0; i < Rows; ++i)
+		// 面ごとに設定を持つ
+		struct FSurfaceSetting
 		{
-			for (int32_t j = 0; j < Cols; ++j)
+			FVector BaseOffset;
+			FVector XStep;
+			FVector YStep;
+		};
+
+		// 左面・右面・底面・天面の設定
+		TArray<FSurfaceSetting> SurfaceSettings = {
+			{ FVector(0.0f, 0.0f, 0.0f),    FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // 左面
+			{ FVector(800.0f, 0.0f, 0.0f), FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // 中央面
+			{ FVector(1600.0f, 0.0f, 0.0f),  FVector(0.0f, 200.0f, 0.0f), FVector(0.0f, 0.0f, 200.0f) }, // 右面
+			{ FVector(0.0f, 0.0f, -200.0f), FVector(200.0f, 0.0f, 0.0f), FVector(0.0f, 200.0f, 0.0f) }, // 底面
+
+			//{ FVector(0.0f, 0.0f, 800.0f),  FVector(100.0f, 0.0f, 0.0f), FVector(0.0f, 100.0f, 0.0f) }, // 天面
+		};
+
+		for (const FSurfaceSetting& Surface : SurfaceSettings)
+		{
+			for (int32 i = 0; i < Rows; ++i)
 			{
-				FVector SpawnLocation(0.0f,i * 100.0f, j * 100.0f);
-				FRotator SpawnRotation = FRotator::ZeroRotator;
-				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
-
-				if (Neuron)
+				for (int32 j = 0; j < Cols; ++j)
 				{
-					//Neuron->NeuronID = Index;
-					//Neuron->GridPosition = FVector(Row, Col, 0);
-					Neuron->Initialize(FVector(0,i*100,j*100), tau, tau_a, tau_b,
-						gB, gL,
-						W_b, W_hb,
-						W_a, W_ha,
-						W_s, beta, V_th);
+					FVector SpawnLocation = Surface.BaseOffset + Surface.XStep * i + Surface.YStep * j;
+					FRotator SpawnRotation = FRotator::ZeroRotator;
+					ANeurons* Neuron = GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
 
-					SpawnedNeurons.Add(Neuron);
+					if (Neuron)
+					{
+
+						Neuron->Initialize(tau, tau_a, tau_b,
+							gB, gL,
+							W_b, W_hb,
+							W_a, W_ha,
+							W_s, beta, V_th,0);
+
+						SpawnedNeurons.Add(Neuron);
+					}
 				}
 			}
 		}
 
-		for (int32_t i = 0; i < Rows; ++i)
-		{
-			for (int32_t j = 0; j < Cols; ++j)
-			{
-				FVector SpawnLocation(700.0f,i * 100.0f, j * 100.0f);
-				FRotator SpawnRotation = FRotator::ZeroRotator;
-				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
-
-				if (Neuron)
-				{
-					//Neuron->NeuronID = Index;
-					//Neuron->GridPosition = FVector(Row, Col, 0);
-					Neuron->Initialize(FVector(700.0f,i*100,j*100), tau, tau_a, tau_b,
-						gB, gL,
-						W_b, W_hb,
-						W_a, W_ha,
-						W_s, beta, V_th);
-
-					SpawnedNeurons.Add(Neuron);
-				}
-			}
-		}
-
-		for (int32_t i = 0; i < Rows; ++i)
-		{
-			for (int32_t j = 0; j < Cols; ++j)
-			{
-				FVector SpawnLocation(i*100.0f,j * 100.0f, -100.0f);
-				FRotator SpawnRotation = FRotator::ZeroRotator;
-				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
-
-				if (Neuron)
-				{
-					//Neuron->NeuronID = Index;
-					//Neuron->GridPosition = FVector(Row, Col, 0);
-					Neuron->Initialize(FVector(700.0f,i*100,j*100), tau, tau_a, tau_b,
-						gB, gL,
-						W_b, W_hb,
-						W_a, W_ha,
-						W_s, beta, V_th);
-
-					SpawnedNeurons.Add(Neuron);
-				}
-			}
-		}
-
-		for (int32_t i = 0; i < Rows; ++i)
-		{
-			for (int32_t j = 0; j < Cols; ++j)
-			{
-				FVector SpawnLocation(i*100.0f,j * 100.0f, 800.0f);
-				FRotator SpawnRotation = FRotator::ZeroRotator;
-				ANeurons* Neuron= GetWorld()->SpawnActor<ANeurons>(NeuronClass, SpawnLocation, SpawnRotation);
-
-				if (Neuron)
-				{
-					//Neuron->NeuronID = Index;
-					//Neuron->GridPosition = FVector(Row, Col, 0);
-					Neuron->Initialize(FVector(700.0f,i*100,j*100), tau, tau_a, tau_b,
-						gB, gL,
-						W_b, W_hb,
-						W_a, W_ha,
-						W_s, beta, V_th);
-
-					SpawnedNeurons.Add(Neuron);
-				}
-			}
-		}
 	}
 }
 TArray<TArray<int>> ANetwork::createBitmap(int note, int gridSize) {

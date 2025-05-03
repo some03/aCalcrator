@@ -23,6 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void SynapseLineInit(FVector Start, FVector End,bool apical);
+	void CurveLineInit(FVector Start, FVector End, FVector Control);
 
 	int w = 0;
 

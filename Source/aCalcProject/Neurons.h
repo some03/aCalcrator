@@ -23,14 +23,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	void Initialize(FVector LogicalPosition,
-		double tau_, double tau_a_, double tau_b_,
+	void Initialize(double tau_, double tau_a_, double tau_b_,
 		double gB_, double gL_,
 		double W_b_, double W_hb_,
 		double W_a_, double W_ha_,
-		double W_s_, double beta_, double V_th_);
+		double W_s_, double beta_, double V_th_,bool type );
 
 	void Update(double S_in_basal, double S_in_apical, double rec, double dt);
+	void LIFUpdate(double rec,double dt);
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
@@ -47,9 +47,13 @@ public:
 	double stdptime = 0.0;
 	bool sensor = 0.0;
 
+	double lifv = 0.0;
+	double lifr = 1;
+
+
 	int Heviside(double r, double threshold);
 	double Sigmoid(double o, double b);
-	void UpdateVisuals(bool ext); // 色やスケール変化
+	void UpdateVisuals(int num); // 色やスケール変化
 
 
 };

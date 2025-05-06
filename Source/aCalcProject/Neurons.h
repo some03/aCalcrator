@@ -50,10 +50,15 @@ public:
 	double lifv = 0.0;
 	double lifr = 1;
 
+	uint64_t inputspike;
+	uint64_t outputspike=1;
+
+
 
 	int Heviside(double r, double threshold);
 	double Sigmoid(double o, double b);
 	void UpdateVisuals(int num); // 色やスケール変化
+	void UpdateBrightness(float brightness); // 色やスケール変化
 
 
 };

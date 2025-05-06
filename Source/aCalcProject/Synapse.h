@@ -24,8 +24,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void SynapseLineInit(FVector Start, FVector End,bool apical);
 	void CurveLineInit(FVector Start, FVector End, FVector Control);
-
-	int w = 0;
+	int w;
+	TArray<uint64_t>W;
 
 	UPROPERTY(EditAnywhere)
 	USplineComponent* Spline;

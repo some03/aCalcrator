@@ -8,7 +8,8 @@
 
 DigitsDataLoader::DigitsDataLoader()
 {
-    Rng.Initialize(FDateTime::Now().GetMillisecond());
+    //Rng.Initialize(FDateTime::Now().GetMillisecond());
+    Rng.Initialize(0);
 }
 
 DigitsDataLoader::~DigitsDataLoader()
@@ -69,7 +70,7 @@ void DigitsDataLoader::GeneratePoissonSpikes(int32 Tms, int32 dtms)
 			for (int32 i = 0; i < 64; ++i)
 			{
 				float Rate = Sample.Pixels[i];
-				float P = Rate * (dtms / 1000.0f);
+				float P = Rate /* (dtms / 1000.0f)*/;
 				float R = Rng.FRand();
 				Sample.SpikeTrain[t][i] = (R < P) ? 1 : 0;
 			}
@@ -77,4 +78,28 @@ void DigitsDataLoader::GeneratePoissonSpikes(int32 Tms, int32 dtms)
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Generated Poisson spikes: T=%d ms, dt=%d ms"), Tms, dtms);
+}
+bool DigitsDataLoader::GetPixelSpikeTrain(int32 SampleIndex,
+	int32 PixelIndex,
+	TArray<uint8>& OutSpikeTrain) const
+{
+	// 範囲チェック
+	if (!Samples.IsValidIndex(SampleIndex) || PixelIndex < 0 || PixelIndex >= 64)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("GetPixelSpikeTrain: invalid index (sample=%d, pixel=%d)"),
+			SampleIndex, PixelIndex);
+		return false;
+	}
+
+	const TArray<TArray<uint8>>& SpikeMat = Samples[SampleIndex].SpikeTrain;
+	int32 TimeSteps = SpikeMat.Num();
+	OutSpikeTrain.SetNum(TimeSteps);
+
+	for (int32 t = 0; t < TimeSteps; ++t)
+	{
+		OutSpikeTrain[t] = SpikeMat[t][PixelIndex];
+	}
+
+	return true;
 }

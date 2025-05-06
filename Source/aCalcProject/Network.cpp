@@ -19,14 +19,15 @@ ANetwork::ANetwork()
 void ANetwork::BeginPlay()
 {
 	Super::BeginPlay();
-	dt = 0;
+	dt = 1;
 	feedback = false;
+	time = 64;
 
 	DigitsDataLoader DataLoader;
 	if (DataLoader.LoadOptDigits(TEXT("Data/optdigits.txt")))
 	{
 		UE_LOG(LogTemp, Log, TEXT("Loaded %d samples"), DataLoader.Samples.Num());
-		DataLoader.GeneratePoissonSpikes(100, 1);
+		DataLoader.GeneratePoissonSpikes(time, dt);
 	}
 	else
 	{
@@ -34,47 +35,38 @@ void ANetwork::BeginPlay()
 		return;
 	}
 
-/*
-	// Content フォルダへの絶対パスを組み立て
-	FString FilePath = FPaths::ProjectContentDir() / TEXT("Data/optdigits.txt");
+	input.SetNum(DataLoader.Samples.Num());
+	sensor.SetNum(DataLoader.Samples.Num());
 
-
-	// まずファイルの存在チェック
-	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
+	for (int i = 0; i < DataLoader.Samples.Num(); ++i)
 	{
-		UE_LOG(LogTemp, Error, TEXT("File not found: %s"), *FilePath);
-		return;
+		input[i].SetNum(Cols * Rows);
+		sensor[i].SetNum(Cols * Rows);
 	}
 
-	// 行ごとに読み込む
-	TArray<FString> Lines;
-	if (FFileHelper::LoadFileToStringArray(Lines, *FilePath))
-	{
-		UE_LOG(LogTemp, Log, TEXT("Loaded %d lines from %s"), Lines.Num(), *FilePath);
-		for (const FString& Line : Lines)
-		{
-			// カンマで分割
-			TArray<FString> Cells;
-			Line.ParseIntoArray(Cells, TEXT(","), true);
 
-			// 0〜63 が画素値、64 がラベル
-			TArray<float> Pixels;
-			Pixels.Reserve(64);
-			for (int32 i = 0; i < 64; ++i)
-			{
-				float v = FCString::Atof(*Cells[i]) / 16.0f;  // 正規化
-				Pixels.Add(v);
+	for (int num = 0; num < 1; ++num)
+	{
+		for (int i = 0; i < Rows * Cols; ++i)
+		{
+			pixel.Empty();
+			uint64_t bit=0;
+			if (DataLoader.GetPixelSpikeTrain(num, i, pixel)) {
+
+				for (int j = 0; j < pixel.Num(); j++) {
+
+					bit = (bit << 1) | uint64_t(pixel[j] & 0x1);
+				}
+				input[num][i] = bit;
+			//	UE_LOG(LogTemp, Log, TEXT("Neuron %d output: %llu"), i, input[num][i]);
 			}
-			int32 Label = FCString::Atoi(*Cells[64]);
-			// ここでPixels, LabelをPoissonエンコード→SNNへ渡す
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to get pixel spike train"));
+			}
 		}
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to load file: %s"), *FilePath);
-	}
-*/
-
+	pixel.Reset(0);
 	
 
 	for (int i = 0;i < Cols * Rows;i++) {
@@ -163,6 +155,35 @@ void ANetwork::BeginPlay()
 void ANetwork::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	int midstart = Cols * Rows;
+	int midend = Cols * Rows * 2;
+	int outputstart = Cols * Rows * 2;
+	int outputend = Cols * Rows * 3;
+	int t = 0;
+	while (simtime < 2) {
+		if (!feedback) {
+			for (int i = midstart;i < midend;i++) {
+				SpawnedNeurons[i]->inputspike = input[0][(i-midstart)];
+
+			}
+			uint64_t sum = SpawnedNeurons[midstart]->inputspike;
+			for (int i = outputstart;i < outputend;i++) {
+				for (int j = midstart+1;j < midend;j++) {
+
+					sum = sum&SpawnedNeurons[j]->inputspike;
+				}
+				SpawnedNeurons[i]->outputspike = sum;
+				uint64_t maxVal = std::numeric_limits<uint64_t>::max();  // = 0xFFFF...FFFF
+				double ratio = double(SpawnedNeurons[i]->outputspike) / double(maxVal);   // 0.0～1.0
+				double scaled = ratio * 100.0;
+				SpawnedNeurons[i]->UpdateBrightness(scaled);
+				UE_LOG(LogTemp, Log, TEXT("Neuron %d output: %llu scaled:%f"), i, sum,scaled);
+			}
+		}
+
+		simtime++;
+	}
 
 
 

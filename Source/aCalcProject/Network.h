@@ -55,11 +55,15 @@ public:
 
 	int dt = 0;
 	int time = 1;
+	int simtime = 0;
 	double s_in_basal = 0;
 	double s_in_apical = 0;
-	TArray<TArray<int>>input;
-	TArray<TArray<int>>sensor;
+	TArray<TArray<uint64_t>>input;
+	TArray<TArray<uint64_t>>sensor;
 	bool feedback = false;
+
+	TArray<uint8>pixel;
+
 
 
 };

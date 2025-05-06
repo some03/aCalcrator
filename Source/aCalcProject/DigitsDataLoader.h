@@ -16,6 +16,9 @@ public:
 	TArray<FDigitSample> Samples;
 	bool LoadOptDigits(const FString& RelativePath);
 	void GeneratePoissonSpikes(int32 Tms, int32 dtms);
+	bool GetPixelSpikeTrain(int32 SampleIndex,
+		int32 PixelIndex,
+		TArray<uint8>& OutSpikeTrain) const;
 private:
 	/** ÄŒ»«‚ ‚è^‚È‚µ‚ğØ‚è‘Ö‚¦‚ç‚ê‚é UE —”ƒXƒgƒŠ[ƒ€ */
 	FRandomStream Rng;

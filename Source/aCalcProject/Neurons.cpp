@@ -117,8 +117,11 @@ void ANeurons::UpdateVisuals(int num)
 		}
 		else if (num == 1) {
 			FLinearColor Color = FLinearColor::Blue;
-			Color.A = 0.3f;
+			Color.A = 0.8f;
 			Mat->SetVectorParameterValue("Color", Color);
+
+			Mat->SetScalarParameterValue("Brightness", 150);
+
 		}
 		else if (num == 2) {
 			FLinearColor Color = FLinearColor::Yellow;
@@ -130,6 +133,13 @@ void ANeurons::UpdateVisuals(int num)
 			Color.A = 0.3f;
 			Mat->SetVectorParameterValue("Color", Color);
 		}
+	}
+}
+void ANeurons::UpdateBrightness(float brightness) {
+	auto Mat = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+	if (Mat)
+	{
+		Mat->SetScalarParameterValue("Brightness", brightness);
 	}
 }
 

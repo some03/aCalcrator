@@ -24,6 +24,7 @@ ASynapse::ASynapse()
 	{
 		LineMesh = MeshAsset.Object;
 	}
+	W.SetNum(8 * 8);
 
 }
 
@@ -64,7 +65,7 @@ void ASynapse::SynapseLineInit(FVector Start, FVector End, bool apical)
 
 	FLinearColor CyanColor(0.3f, 0.3f, 0.3f, 0.1f);;
 	auto DynMat = UMaterialInstanceDynamic::Create(LineMaterial, this);
-	DynMat->SetVectorParameterValue("Color", apical ? CyanColor: FLinearColor::Gray);
+	DynMat->SetVectorParameterValue("Color", apical ? CyanColor: FLinearColor::White);
 	Mesh->SetMaterial(0, DynMat);
 
 	// アタッチ＆登録
@@ -105,8 +106,8 @@ void ASynapse::CurveLineInit(FVector Start, FVector End, FVector Control)
 			// マテリアル
 			UMaterialInstanceDynamic* Dyn = UMaterialInstanceDynamic::Create(LineMaterial, this);
 
-			FLinearColor CyanColor(0.3f, 0.3f, 0.3f, 0.1f);;
-			Dyn->SetVectorParameterValue(FName("Color"), CyanColor);
+			FLinearColor Color(1.0f, 1.0f, 1.0f, 0.8f);;
+			Dyn->SetVectorParameterValue(FName("Color"), Color);
 			Mesh->SetMaterial(0, Dyn);
 
 			// Attach → Register
